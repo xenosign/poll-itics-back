@@ -2,12 +2,23 @@ const mongoClient = require("../mongoConnect");
 
 const _client = mongoClient.connect();
 
-const getPolls = async (id) => {
+const getPollsList = async () => {
+  try {
+    const client = await _client;
+    const polls = client.db("poll-itics").collection("polls");
+    const pollsList = await polls.find({}).limit(10).toArray();
+
+    return pollsList;
+  } catch (err) {
+    console.log("ERROR: ", err);
+  }
+}
+
+const getPoll = async (id) => {
   try {
     const client = await _client;
     const polls = client.db("poll-itics").collection("polls");
     const pollInfo = await polls.findOne({ id: Number(id) });
-    console.log(pollInfo);
 
     return pollInfo;
   } catch (err) {
@@ -45,4 +56,4 @@ const rightUp = async (id) => {
   }
 };
 
-module.exports = { getPolls, leftUp, rightUp };
+module.exports = { getPollsList, getPoll, leftUp, rightUp };

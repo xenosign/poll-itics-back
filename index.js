@@ -8,8 +8,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
-const mongoRouter = require("./routes/mongo");
-app.use("/", mongoRouter);
+const pollRouter = require("./routes/poll");
+app.use("/", pollRouter);
 
 app.listen(PORT, () => {
   console.log(`데이터 통신 서버가 ${PORT}에서 작동 중`);
