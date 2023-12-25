@@ -58,19 +58,19 @@ const rightUp = async (id) => {
   }
 };
 
-const register = async (subject) => {
+const pollRegister = async (subject) => {
   try {
     const client = await _client;
-    const counterDB = client.db("poll-itics").collection("counters");
+    const counterDB = client.db("poll-itics").collection("poll-counter");
     const counterObj = await counterDB.findOneAndUpdate(
       {},
-      { $inc: { counter: 1 } }
+      { $inc: { pollCounter: 1 } }
     );
-    const counter = counterObj.counter;
+    const pollCounter = counterObj.pollCounter;
 
     const pollDB = client.db("poll-itics").collection("polls");
     await pollDB.insertOne({
-      id: counter,
+      id: pollCounter,
       subject,
       left: 0,
       leftList: [],
@@ -84,4 +84,4 @@ const register = async (subject) => {
   }
 };
 
-module.exports = { getPollsList, getPoll, leftUp, rightUp, register };
+module.exports = { getPollsList, getPoll, leftUp, rightUp, pollRegister };

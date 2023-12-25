@@ -12,7 +12,7 @@ app.use(cors());
 
 const pollRouter = require("./routes/poll");
 const userRouter = require("./routes/user");
-app.use("/", pollRouter);
+app.use("/poll", pollRouter);
 app.use("/user", userRouter);
 
 app.listen(PORT, () => {
