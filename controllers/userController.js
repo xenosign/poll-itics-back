@@ -37,6 +37,7 @@ const userRegister = async (req, res) => {
       kakaoId: userInfo.kakaoId,
       nickname: userInfo.nickname,
       email: userInfo.email,
+      histories: { 1: 'L' },
       registerdAt: new Date(),
       updateAt: new Date(),
     });

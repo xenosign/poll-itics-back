@@ -26,33 +26,40 @@ const getPoll = async (id) => {
   }
 };
 
-const leftUp = async (id) => {
+const leftUp = async (pollId, userId) => {
   try {
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
     await pollDB.updateOne(
-      { id: Number(id) },
+      { id: Number(pollId) },
       {
         $inc: { left: 1 },
         $push: { leftList: 1 },
       }
     );
+
+    const userDB = client.db("poll-itics").collection("users");
+    await userDB.findOneAndUpdate({ id: userId }, { $set: { [`histories.${pollId}`]: 'L' } });
+
   } catch (err) {
     console.log("ERROR: ", err);
   }
 };
 
-const rightUp = async (id) => {
+const rightUp = async (pollId, userId) => {
   try {
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
     await pollDB.updateOne(
-      { id: Number(id) },
+      { id: Number(pollId) },
       {
         $inc: { right: 1 },
         $addToSet: { rightList: 1 },
       }
     );
+
+    const userDB = client.db("poll-itics").collection("users");
+    await userDB.findOneAndUpdate({ id: userId }, { $set: { [`histories.${pollId}`]: 'R' } });
   } catch (err) {
     console.log("ERROR: ", err);
   }

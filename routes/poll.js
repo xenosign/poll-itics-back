@@ -15,14 +15,16 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/:id/left", async (req, res) => {
-  const id = req.params.id;
-  await pollDB.leftUp(id);
+  const pollId = req.params.id;
+  const userId = req.body.userId;
+  await pollDB.leftUp(pollId, userId);
   res.send("성공");
 });
 
 router.post("/:id/right", async (req, res) => {
-  const id = req.params.id;
-  pollDB.rightUp(id);
+  const pollId = req.params.id;
+  const userId = req.body.userId;
+  await pollDB.rightUp(pollId, userId);
   res.send("성공");
 });
 
