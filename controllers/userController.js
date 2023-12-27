@@ -2,6 +2,25 @@ const mongoClient = require("../mongoConnect");
 
 const _client = mongoClient.connect();
 
+const getUserInfo = async (req, res) => {
+  try {
+    const client = await _client;
+
+    const userDB = client.db("poll-itics").collection("users");
+    const userInfo = await userDB.findOne({
+      id: req.body.userId,
+    });
+
+    console.log(userInfo);
+
+    const userInfoStr = JSON.stringify(userInfo);
+    res.status(200).send(userInfoStr);
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(400).send("회원 정보 조회 문제 발생");
+  }
+}
+
 const userLogin = async (req, res) => {
   try {
     const client = await _client;
@@ -11,7 +30,9 @@ const userLogin = async (req, res) => {
       kakaoId: userInfo.kakaoId,
     });
 
-    if (userExists) return res.status(200).send("회원 존재");
+    const userIdStr = String(userExists.id);
+
+    if (userExists) return res.status(200).send(userIdStr);
     res.status(202).send("회원 가입 필요");
   } catch (err) {
     console.log("ERROR: ", err);
@@ -49,4 +70,4 @@ const userRegister = async (req, res) => {
   }
 };
 
-module.exports = { userLogin, userRegister };
+module.exports = { getUserInfo, userLogin, userRegister };
