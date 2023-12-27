@@ -39,8 +39,10 @@ const leftUp = async (pollId, userId) => {
     );
 
     const userDB = client.db("poll-itics").collection("users");
-    await userDB.findOneAndUpdate({ id: userId }, { $set: { [`histories.${pollId}`]: 'L' } });
-
+    await userDB.findOneAndUpdate(
+      { id: userId },
+      { $set: { [`histories.${pollId}`]: `L/${new Date()}` } }
+    );
   } catch (err) {
     console.log("ERROR: ", err);
   }
@@ -59,7 +61,10 @@ const rightUp = async (pollId, userId) => {
     );
 
     const userDB = client.db("poll-itics").collection("users");
-    await userDB.findOneAndUpdate({ id: userId }, { $set: { [`histories.${pollId}`]: 'R' } });
+    await userDB.findOneAndUpdate(
+      { id: userId },
+      { $set: { [`histories.${pollId}`]: `R/${new Date()}` } }
+    );
   } catch (err) {
     console.log("ERROR: ", err);
   }
