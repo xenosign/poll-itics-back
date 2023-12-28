@@ -155,8 +155,9 @@ const rightUp = async (req, res) => {
   }
 };
 
-const pollRegister = async (subject) => {
+const pollRegister = async (req, res) => {
   try {
+    const subject = req.params.subject;
     const client = await _client;
     const counterDB = client.db("poll-itics").collection("poll-counter");
     const counterObj = await counterDB.findOneAndUpdate(
