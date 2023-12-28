@@ -11,8 +11,6 @@ const getUserInfo = async (req, res) => {
       id: req.body.userId,
     });
 
-    console.log(userInfo);
-
     const userInfoStr = JSON.stringify(userInfo);
     res.status(200).send(userInfoStr);
   } catch (err) {

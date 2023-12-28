@@ -30,13 +30,27 @@ const leftUp = async (pollId, userId) => {
   try {
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
-    await pollDB.updateOne(
-      { id: Number(pollId) },
-      {
-        $inc: { left: 1 },
-        $push: { leftList: 1 },
-      }
-    );
+
+    const pollInfo = await pollDB.findOne({ id: Number(pollId) });
+    const votedList = pollInfo.list;
+    const isVoted = votedList.includes(userId);
+
+    if (isVoted) {
+      await pollDB.updateOne(
+        { id: Number(pollId) },
+        {
+          $inc: { left: 1, right: -1 },
+        }
+      );
+    } else {
+      await pollDB.updateOne(
+        { id: Number(pollId) },
+        {
+          $inc: { left: 1 },
+          $push: { list: userId },
+        }
+      );
+    }
 
     const userDB = client.db("poll-itics").collection("users");
     await userDB.findOneAndUpdate(
@@ -52,13 +66,27 @@ const rightUp = async (pollId, userId) => {
   try {
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
-    await pollDB.updateOne(
-      { id: Number(pollId) },
-      {
-        $inc: { right: 1 },
-        $addToSet: { rightList: 1 },
-      }
-    );
+
+    const pollInfo = await pollDB.findOne({ id: Number(pollId) });
+    const votedList = pollInfo.list;
+    const isVoted = votedList.includes(userId);
+
+    if (isVoted) {
+      await pollDB.updateOne(
+        { id: Number(pollId) },
+        {
+          $inc: { right: 1, left: -1 },
+        }
+      );
+    } else {
+      await pollDB.updateOne(
+        { id: Number(pollId) },
+        {
+          $inc: { right: 1 },
+          $push: { list: userId },
+        }
+      );
+    }
 
     const userDB = client.db("poll-itics").collection("users");
     await userDB.findOneAndUpdate(
@@ -85,9 +113,8 @@ const pollRegister = async (subject) => {
       id: pollCounter,
       subject,
       left: 0,
-      leftList: [],
       right: 0,
-      rightList: [],
+      list: [],
       createAt: new Date(),
       updateAt: new Date(),
     });
