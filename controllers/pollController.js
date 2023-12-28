@@ -2,38 +2,62 @@ const mongoClient = require("../mongoConnect");
 
 const _client = mongoClient.connect();
 
-const getPollsList = async () => {
+const LIMIT_MINUTES = Number(process.env.LIMIT_MINUTES);
+const LIMIT_DAYS = Number(process.env.LIMIT_DAYS);
+
+const getPollsList = async (req, res) => {
   try {
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
     const pollsList = await pollDB.find({}).limit(10).toArray();
-
-    return pollsList;
+    res.status(200).json(pollsList);
   } catch (err) {
     console.log("ERROR: ", err);
+    res.status(500).send("투표 목록 조회 문제 발생");
   }
 };
 
-const getPoll = async (id) => {
+const getPoll = async (req, res) => {
   try {
+    const pollId = req.params.id;
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
-    const pollInfo = await pollDB.findOne({ id: Number(id) });
+    const pollInfo = await pollDB.findOne({ id: Number(pollId) });
 
-    return pollInfo;
+    res.status(200).json(pollInfo);
   } catch (err) {
     console.log("ERROR: ", err);
+    res.status(500).send("투표 정보 조회 문제 발생");
   }
 };
 
-const leftUp = async (pollId, userId) => {
+const leftUp = async (req, res) => {
   try {
+    const pollId = req.params.id;
+    const userId = req.body.userId;
+
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
+    const userDB = client.db("poll-itics").collection("users");
 
     const pollInfo = await pollDB.findOne({ id: Number(pollId) });
     const votedList = pollInfo.list;
     const isVoted = votedList.includes(userId);
+
+    const userInfo = await userDB.findOne({ id: userId });
+    const voteInfo = userInfo.histories[`${pollId}`];
+
+    if (voteInfo !== undefined && voteInfo !== "") {
+      const tmpArr = voteInfo.split("/");
+      const limitTimeStr = tmpArr[1];
+      const limitTime = new Date(limitTimeStr);
+      const now = new Date();
+
+      if (limitTime > now) {
+        console.log("재투표 허용 시간이 지나지 않았습니다.");
+        return res.status(400).send("재투표 허용 시간이 지나지 않았습니다.");
+      }
+    }
 
     if (isVoted) {
       await pollDB.updateOne(
@@ -52,24 +76,50 @@ const leftUp = async (pollId, userId) => {
       );
     }
 
-    const userDB = client.db("poll-itics").collection("users");
+    const limitTime = new Date();
+    limitTime.setSeconds(0);
+    limitTime.setMinutes(limitTime.getMinutes() + LIMIT_MINUTES);
+    // limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
+
     await userDB.findOneAndUpdate(
       { id: userId },
-      { $set: { [`histories.${pollId}`]: `L/${new Date()}` } }
+      { $set: { [`histories.${pollId}`]: `L/${limitTime}` } }
     );
+
+    return res.status(200).send("투표 완료");
   } catch (err) {
     console.log("ERROR: ", err);
+    return res.status(500).send("서버 문제 발생");
   }
 };
 
-const rightUp = async (pollId, userId) => {
+const rightUp = async (req, res) => {
   try {
+    const pollId = req.params.id;
+    const userId = req.body.userId;
+
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
+    const userDB = client.db("poll-itics").collection("users");
 
     const pollInfo = await pollDB.findOne({ id: Number(pollId) });
     const votedList = pollInfo.list;
     const isVoted = votedList.includes(userId);
+
+    const userInfo = await userDB.findOne({ id: userId });
+    const voteInfo = userInfo.histories[`${pollId}`];
+
+    if (voteInfo !== undefined && voteInfo !== "") {
+      const tmpArr = voteInfo.split("/");
+      const limitTimeStr = tmpArr[1];
+      const limitTime = new Date(limitTimeStr);
+      const now = new Date();
+
+      if (limitTime > now) {
+        console.log("재투표 허용 시간이 지나지 않았습니다.");
+        return res.status(400).send("재투표 허용 시간이 지나지 않았습니다.");
+      }
+    }
 
     if (isVoted) {
       await pollDB.updateOne(
@@ -88,13 +138,20 @@ const rightUp = async (pollId, userId) => {
       );
     }
 
-    const userDB = client.db("poll-itics").collection("users");
+    const limitTime = new Date();
+    limitTime.setSeconds(0);
+    limitTime.setMinutes(limitTime.getMinutes() + LIMIT_MINUTES);
+    // limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
+
     await userDB.findOneAndUpdate(
       { id: userId },
-      { $set: { [`histories.${pollId}`]: `R/${new Date()}` } }
+      { $set: { [`histories.${pollId}`]: `R/${limitTime}` } }
     );
+
+    return res.status(200).send("투표 완료");
   } catch (err) {
     console.log("ERROR: ", err);
+    return res.status(500).send("서버 문제 발생");
   }
 };
 
@@ -118,8 +175,11 @@ const pollRegister = async (subject) => {
       createAt: new Date(),
       updateAt: new Date(),
     });
+
+    res.status(200).send("투표 등록 성공");
   } catch (err) {
     console.log("ERROR: ", err);
+    res.status(500).send("투표 등록 실패");
   }
 };
 
