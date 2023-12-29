@@ -78,8 +78,8 @@ const leftUp = async (req, res) => {
 
     const limitTime = new Date();
     limitTime.setSeconds(0);
-    limitTime.setMinutes(limitTime.getMinutes() + LIMIT_MINUTES);
-    // limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
+    // limitTime.setMinutes(limitTime.getMinutes() + LIMIT_MINUTES);
+    limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
 
     await userDB.findOneAndUpdate(
       { id: userId },
@@ -140,8 +140,8 @@ const rightUp = async (req, res) => {
 
     const limitTime = new Date();
     limitTime.setSeconds(0);
-    limitTime.setMinutes(limitTime.getMinutes() + LIMIT_MINUTES);
-    // limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
+    // limitTime.setMinutes(limitTime.getMinutes() + LIMIT_MINUTES);
+    limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
 
     await userDB.findOneAndUpdate(
       { id: userId },
@@ -158,6 +158,8 @@ const rightUp = async (req, res) => {
 const pollRegister = async (req, res) => {
   try {
     const subject = req.params.subject;
+    const leftSubject = req.params.leftSubject;
+    const rightSubject = req.params.rightSubject;
     const client = await _client;
     const counterDB = client.db("poll-itics").collection("poll-counter");
     const counterObj = await counterDB.findOneAndUpdate(
@@ -170,6 +172,8 @@ const pollRegister = async (req, res) => {
     await pollDB.insertOne({
       id: pollCounter,
       subject,
+      leftSubject,
+      rightSubject,
       left: 0,
       right: 0,
       list: [],

@@ -11,6 +11,9 @@ router.post("/:id/left", pollDB.leftUp);
 
 router.post("/:id/right", pollDB.rightUp);
 
-router.post("/register/:subject", pollDB.pollRegister);
+router.post(
+  "/register/:subject/:leftSubject/:rightSubject",
+  pollDB.pollRegister
+);
 
 module.exports = router;
