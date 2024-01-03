@@ -34,7 +34,7 @@ const getPoll = async (req, res) => {
 const leftUp = async (req, res) => {
   try {
     const pollId = req.params.id;
-    const userId = req.body.userId;
+    const userCode = req.body.code;
 
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
@@ -42,9 +42,9 @@ const leftUp = async (req, res) => {
 
     const pollInfo = await pollDB.findOne({ id: Number(pollId) });
     const votedList = pollInfo.list;
-    const isVoted = votedList.includes(userId);
+    const isVoted = votedList.includes(userCode);
 
-    const userInfo = await userDB.findOne({ id: userId });
+    const userInfo = await userDB.findOne({ code: userCode });
     const voteInfo = userInfo.histories[`${pollId}`];
 
     if (voteInfo !== undefined && voteInfo !== "") {
@@ -71,7 +71,7 @@ const leftUp = async (req, res) => {
         { id: Number(pollId) },
         {
           $inc: { left: 1 },
-          $push: { list: userId },
+          $push: { list: userCode },
         }
       );
     }
@@ -82,7 +82,7 @@ const leftUp = async (req, res) => {
     limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
 
     await userDB.findOneAndUpdate(
-      { id: userId },
+      { code: userCode },
       { $set: { [`histories.${pollId}`]: `L/${limitTime}` } }
     );
 
@@ -96,7 +96,7 @@ const leftUp = async (req, res) => {
 const rightUp = async (req, res) => {
   try {
     const pollId = req.params.id;
-    const userId = req.body.userId;
+    const userCode = req.body.code;
 
     const client = await _client;
     const pollDB = client.db("poll-itics").collection("polls");
@@ -104,9 +104,9 @@ const rightUp = async (req, res) => {
 
     const pollInfo = await pollDB.findOne({ id: Number(pollId) });
     const votedList = pollInfo.list;
-    const isVoted = votedList.includes(userId);
+    const isVoted = votedList.includes(userCode);
 
-    const userInfo = await userDB.findOne({ id: userId });
+    const userInfo = await userDB.findOne({ code: userCode });
     const voteInfo = userInfo.histories[`${pollId}`];
 
     if (voteInfo !== undefined && voteInfo !== "") {
@@ -133,7 +133,7 @@ const rightUp = async (req, res) => {
         { id: Number(pollId) },
         {
           $inc: { right: 1 },
-          $push: { list: userId },
+          $push: { list: userCode },
         }
       );
     }
@@ -144,7 +144,7 @@ const rightUp = async (req, res) => {
     limitTime.setDate(limitTime.getDate() + LIMIT_DAYS);
 
     await userDB.findOneAndUpdate(
-      { id: userId },
+      { code: userCode },
       { $set: { [`histories.${pollId}`]: `R/${limitTime}` } }
     );
 

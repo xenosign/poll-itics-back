@@ -1,6 +1,14 @@
 const mongoClient = require("../mongoConnect");
+const crypto = require("crypto");
 
 const _client = mongoClient.connect();
+
+function encrypt(text, key) {
+  const cipher = crypto.createCipher("aes-256-cbc", key);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return encrypted;
+}
 
 const getUserInfo = async (req, res) => {
   try {
@@ -8,7 +16,7 @@ const getUserInfo = async (req, res) => {
 
     const userDB = client.db("poll-itics").collection("users");
     const userInfo = await userDB.findOne({
-      id: req.body.userId,
+      code: req.body.code,
     });
 
     const userInfoStr = JSON.stringify(userInfo);
@@ -17,7 +25,7 @@ const getUserInfo = async (req, res) => {
     console.log("ERROR: ", err);
     res.status(400).send("회원 정보 조회 문제 발생");
   }
-}
+};
 
 const userLogin = async (req, res) => {
   try {
@@ -28,10 +36,10 @@ const userLogin = async (req, res) => {
       kakaoId: userInfo.kakaoId,
     });
 
-    const userIdStr = String(userExists.id);
+    if (!userExists) return res.status(202).send("회원 가입 필요");
 
-    if (userExists) return res.status(200).send(userIdStr);
-    res.status(202).send("회원 가입 필요");
+    const userCode = userExists.code;
+    return res.status(200).send(userCode);
   } catch (err) {
     console.log("ERROR: ", err);
     res.status(400).send("회원 가입 문제 발생");
@@ -47,24 +55,29 @@ const userRegister = async (req, res) => {
       { $inc: { userCounter: 1 } }
     );
     const idCounter = counterObj.userCounter;
-
     const userInfo = req.body;
+    const code = encrypt(String(idCounter), String(userInfo.kakaoId));
 
     const userDB = client.db("poll-itics").collection("users");
-    await userDB.insertOne({
+    const newUser = {
       id: idCounter,
+      code: code,
       kakaoId: userInfo.kakaoId,
       nickname: userInfo.nickname,
       email: userInfo.email,
-      histories: { 1: 'L' },
+      histories: {},
       registerdAt: new Date(),
       updateAt: new Date(),
-    });
+    };
 
-    res.status(200).send("로그인 성공");
+    await userDB.insertOne(newUser);
+
+    const newUserStr = JSON.stringify(newUser);
+
+    res.status(200).send(newUserStr);
   } catch (err) {
     console.log("ERROR: ", err);
-    res.status(400).send("로그인 문제 발생");
+    res.status(400).send("회원가입 문제 발생");
   }
 };
 
